@@ -4,7 +4,7 @@
 		module="designated-director$sources"
 		revision="0.1.0-SNAPSHOT"
 		status="integration"
-		publication="20180516225852"
+		publication="20180519184526"
 	/>
 	<configurations>
 		<conf name="compile" visibility="public" description=""/>
