@@ -1,7 +1,7 @@
 package designated.director.repositories
 
 import designated.director.actors.Team
-import org.neo4j.driver.v1.TransactionWork
+import org.neo4j.driver.v1.{Statement, TransactionWork, Values}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -11,13 +11,33 @@ case class TeamMemoryRepository() extends BaseRepository[Team] {
 
   import org.neo4j.driver.v1.GraphDatabase
 
-  val uri = "bolt://localhost:17687"
-  val driver = GraphDatabase.driver(uri, AuthTokens.basic("neo4j", "password"))
-  var teams = Set.empty[Team]
+  private val uri = "bolt://localhost:17687"
+  private val driver = GraphDatabase.driver(uri, AuthTokens.basic("neo4j", "password"))
+  private var teams = Set.empty[Team]
 
   override def getAll(implicit ex:ExecutionContext): Future[Seq[Team]] = Future(teams.toSeq)
 
-  override def get(id: String)(implicit ex:ExecutionContext): Future[Option[Team]] = Future(teams.find(_.id == id))
+  override def get(id: String)(implicit ex:ExecutionContext): Future[Option[Team]] = {
+    val session = driver.session()
+
+    val t = session.readTransaction(new TransactionWork[Option[Team]]() {
+      import org.neo4j.driver.v1.Transaction
+
+      def execute(tx: Transaction): Option[Team] = {
+        val s = new Statement("MATCH (t:Team) WHERE t.id = $id RETURN t;")
+        val r = tx.run(s.withParameters(Values.parameters("id", id)))
+
+        if(r.hasNext) {
+          val record = r.single()
+          Some(Team(record.get("t").get("id").asString(), record.get("t").get("name").asString()))
+        } else {
+          None
+        }
+      }
+    })
+
+    Future(t)
+  }
 
   override def create(t: Team)(implicit ex:ExecutionContext): Future[Team] = {
     val session = driver.session()
@@ -29,7 +49,7 @@ case class TeamMemoryRepository() extends BaseRepository[Team] {
         "Created"
       }
     })
-    teams += t
+
     Future(t)
   }
 
