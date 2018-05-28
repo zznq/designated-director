@@ -1,15 +1,18 @@
 package designated.director.actors
 
+import java.util.UUID
+
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
 import designated.director.repositories.BaseRepository
 
 final case class Team(id: String, name: String)
+final case class TeamPost(name: String)
 final case class Teams(teams: Seq[Team])
 
 object TeamActor {
   final case object GetTeams
-  final case class CreateTeam(team: Team)
+  final case class CreateTeam(team: TeamPost)
   final case class GetTeam(id: String)
   final case class DeleteTeam(id: String)
 
@@ -27,7 +30,8 @@ class TeamActor(repository:BaseRepository[Team]) extends Actor with ActorLogging
       val o = repository.getAll.map(Teams)
       o pipeTo sender()
     case CreateTeam(team) =>
-      repository.create(team) pipeTo sender()
+      val t = Team(UUID.randomUUID().toString, team.name)
+      repository.create(t) pipeTo sender()
     case GetTeam(id) =>
       repository.get(id) pipeTo sender()
     case DeleteTeam(id) =>
