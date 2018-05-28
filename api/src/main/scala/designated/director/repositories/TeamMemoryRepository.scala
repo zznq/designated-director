@@ -1,5 +1,7 @@
 package designated.director.repositories
 
+import java.util.UUID
+
 import designated.director.actors.Team
 import org.neo4j.driver.v1.TransactionWork
 
@@ -21,6 +23,7 @@ case class TeamMemoryRepository() extends BaseRepository[Team] {
 
   override def create(t: Team)(implicit ex:ExecutionContext): Future[Team] = {
     val session = driver.session()
+
     session.writeTransaction(new TransactionWork[String]() {
       import org.neo4j.driver.v1.Transaction
 

@@ -11,8 +11,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import scala.concurrent.duration._
-
-import designated.director.actors.{Team, Teams}
+import designated.director.actors.{Team, TeamPost, Teams}
 import designated.director.actors.TeamActor.{CreateTeam, DeleteTeam, GetTeam, GetTeams}
 import designated.director.api.JsonSupport
 import designated.director.repositories.BaseRepositoryTypes._
@@ -37,7 +36,7 @@ trait TeamRoutes extends JsonSupport {
               complete(teams)
             },
             post {
-              entity(as[Team]) { e =>
+              entity(as[TeamPost]) { e =>
                 val t = (teamActor ? CreateTeam(e)).mapTo[Team]
                 onSuccess(t) { performed =>
                   tlog.info("Created Team [{}]", t)
