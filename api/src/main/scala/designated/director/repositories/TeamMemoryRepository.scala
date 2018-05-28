@@ -1,10 +1,12 @@
 package designated.director.repositories
 
 import designated.director.actors.Team
-import org.neo4j.driver.v1.{Statement, TransactionWork, Values}
 
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
+
+import org.neo4j.driver.v1.{Statement, TransactionWork, Values}
 
 case class TeamMemoryRepository() extends BaseRepository[Team] {
   import org.neo4j.driver.v1.AuthTokens
@@ -15,7 +17,26 @@ case class TeamMemoryRepository() extends BaseRepository[Team] {
   private val driver = GraphDatabase.driver(uri, AuthTokens.basic("neo4j", "password"))
   private var teams = Set.empty[Team]
 
-  override def getAll(implicit ex:ExecutionContext): Future[Seq[Team]] = Future(teams.toSeq)
+  override def getAll(implicit ex:ExecutionContext): Future[Seq[Team]] = {
+    val session = driver.session()
+
+    val t = session.readTransaction(new TransactionWork[Seq[Team]]() {
+      import org.neo4j.driver.v1.Transaction
+
+      def execute(tx: Transaction): Seq[Team] = {
+        val s = new Statement("MATCH (n:Team) RETURN n;")
+        val rs = tx.run(s)
+
+        rs
+          .list(r => {
+            Team(r.get("n").get("id").asString(), r.get("n").get("name").asString())
+          })
+          .asScala
+      }
+    })
+
+    Future(t)
+  }
 
   override def get(id: String)(implicit ex:ExecutionContext): Future[Option[Team]] = {
     val session = driver.session()
