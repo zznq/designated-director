@@ -13,7 +13,7 @@ lazy val api = (project in file ("./api"))
       organization := "designated.director",
       scalaVersion := "2.12.6"
     )),
-    name := "designated-director",
+    name := "designated-director-api",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor" % akkaVersion,
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
@@ -30,5 +30,6 @@ lazy val api = (project in file ("./api"))
       "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,
       "com.typesafe.akka" %% "akka-stream-testkit"  % akkaVersion     % Test,
       "org.scalatest"     %% "scalatest"            % "3.0.1"         % Test
-    )
+    ),
+    mainClass in (Compile, run) := Some("designated.director.api.WebServer")
   )

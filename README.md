@@ -19,5 +19,7 @@ $ sbt compile
 ## Running
 
 ```
-$ sbt run
+$ sbt
+$ project api
+$ run
 ```
