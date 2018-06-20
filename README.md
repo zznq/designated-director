@@ -23,8 +23,6 @@ $ sbt
 $ project api
 $ run
 ```
-<<<<<<< HEAD
-=======
 
 ## API
 
@@ -34,7 +32,7 @@ $ run
 
 url
 ```javascript
-/teams
+GET /teams
 ```
 
 
@@ -42,7 +40,7 @@ url
 
 url
 ```javascript
-/teams/{team id}
+GET /teams/{team id}
 ```
 
 
@@ -50,7 +48,7 @@ url
 
 url
 ``` javascript
-/teams
+POST /teams
 ```
 
 body
@@ -64,7 +62,6 @@ body
 
 url
 ```javascript
-  /team/{team id}
+DELETE  /team/{team id}
 ```
 
->>>>>>> 54265f5... updates docs

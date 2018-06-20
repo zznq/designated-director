@@ -4,11 +4,10 @@ import designated.director.actors.Team
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
 import org.neo4j.driver.v1.{Statement, TransactionWork, Values}
 
-case class TeamMemoryRepository() extends BaseRepository[Team] {
+case class TeamRepository() extends BaseRepository[Team] {
   import org.neo4j.driver.v1.AuthTokens
 
   import org.neo4j.driver.v1.GraphDatabase
@@ -75,11 +74,21 @@ case class TeamMemoryRepository() extends BaseRepository[Team] {
   }
 
   override def delete(id: String)(implicit ex:ExecutionContext): Future[Either[String, Boolean]] = {
-    Try(this.get(id).foreach(team => team.foreach(innerTeam => teams -= innerTeam))) match {
-      case Failure(exception) =>
-        Future(Left(exception.getMessage))
-      case Success(_) =>
-        Future(Right(true))
-    }
+    val session = driver.session()
+
+    session.writeTransaction(new TransactionWork[String]() {
+      import org.neo4j.driver.v1.Transaction
+
+      override def execute(tx: Transaction): String = {
+        tx.run(
+          s"""
+             | MATCH (t:Team { id: '$id' })
+             | DETACH DELETE t
+           """.stripMargin)
+        "Deleted"
+      }
+    })
+
+    Future(Right(true))
   }
 }
