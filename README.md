@@ -30,6 +30,7 @@ $ run
 
 #### Index
 
+url
 ```javascript
 /teams
 ```
@@ -37,13 +38,15 @@ $ run
 
 #### Item
 
+url
 ```javascript
-/team/{team id}
+/teams/{team id}
 ```
 
 
 #### Create
 
+url
 ``` javascript
 /teams
 ```
@@ -57,6 +60,7 @@ body
 
 #### Delete
 
+url
 ```javascript
   /team/{team id}
 ```
