@@ -23,3 +23,41 @@ $ sbt
 $ project api
 $ run
 ```
+
+## API
+
+### Teams
+
+#### Index
+
+```javascript
+/teams
+```
+
+
+#### Item
+
+```javascript
+/team/{team id}
+```
+
+
+#### Create
+
+``` javascript
+/teams
+```
+
+body
+``` javascript
+{
+	"name": "Boom goes the roof"
+}
+```
+
+#### Delete
+
+```javascript
+  /team/{team id}
+```
+

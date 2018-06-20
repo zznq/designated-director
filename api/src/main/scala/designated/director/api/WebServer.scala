@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import designated.director.actors.{DraftActor, LeagueActor, TeamActor}
-import designated.director.repositories.TeamMemoryRepository
+import designated.director.repositories.TeamRepository
 import designated.director.routes.{DraftRoutes, LeagueRoutes, TeamRoutes}
 
 import scala.concurrent.Await
@@ -20,7 +20,7 @@ object WebServer extends App with DraftRoutes with LeagueRoutes with TeamRoutes 
 
   val draftActor: ActorRef = system.actorOf(DraftActor.props, "draftActor")
   val leagueActor: ActorRef = system.actorOf(LeagueActor.props, "leagueActor")
-  val teamActor: ActorRef = system.actorOf(TeamActor.props(TeamMemoryRepository()), "teamActor")
+  val teamActor: ActorRef = system.actorOf(TeamActor.props(TeamRepository()), "teamActor")
 
   lazy val routes: Route = draftRoutes ~ leagueRoutes ~ teamRoutes
 
