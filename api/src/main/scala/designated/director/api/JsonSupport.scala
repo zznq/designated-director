@@ -15,5 +15,6 @@ trait JsonSupport extends SprayJsonSupport {
   implicit val teamsJsonFormat = jsonFormat1(Teams)
 
   implicit val leagueJsonFormat = jsonFormat2(League)
+  implicit val leaguePostJsonFormat = jsonFormat1(LeaguePost)
   implicit val leaguesJsonFormat = jsonFormat1(Leagues)
 }

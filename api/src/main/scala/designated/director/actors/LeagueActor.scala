@@ -1,34 +1,40 @@
 package designated.director.actors
 
+import java.util.UUID
+
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.pattern.pipe
+import designated.director.repositories.BaseRepository
 
 final case class League(id: String, name: String)
+final case class LeaguePost(name: String)
 final case class Leagues(leagues: Seq[League])
 
 object LeagueActor {
   final case object GetLeagues
-  final case class CreateLeague(league: League)
+  final case class CreateLeague(league: LeaguePost)
   final case class GetLeague(id: String)
   final case class DeleteLeauge(id: String)
 
   def props: Props = Props[LeagueActor]
+  def props(repository: BaseRepository[League]): Props = Props(new LeagueActor(repository))
 }
 
-class LeagueActor extends Actor with ActorLogging {
+class LeagueActor(repository: BaseRepository[League]) extends Actor with ActorLogging {
   import LeagueActor._
 
-  var leagues = Set.empty[League]
+  import context.dispatcher
 
   override def receive: Receive = {
     case GetLeagues =>
-      sender() ! Leagues(leagues.toSeq)
+      val o = repository.getAll.map(Leagues)
+      o pipeTo sender()
     case CreateLeague(league) =>
-      leagues += league
-      sender() ! league
+      val l = League(UUID.randomUUID().toString, league.name)
+      repository.create(l) pipeTo sender()
     case GetLeague(id) =>
-      sender() ! leagues.find(_.id == id)
+      repository get id pipeTo sender()
     case DeleteLeauge(id) =>
-      leagues.find(_.id == id) foreach { league => leagues -= league }
-      sender() ! "Deleted"
+      repository delete id pipeTo sender()
   }
 }
