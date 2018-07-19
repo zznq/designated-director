@@ -5,21 +5,22 @@ import org.neo4j.driver.v1._
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
+case class Connection(uri:String, username: String, password: String)
+
 object BaseRepositoryTypes{
   type DeleteResult = Either[String, Boolean]
   type AllResults[T] = Seq[T]
 }
 
-trait BaseRepository[T] {
+abstract class BaseRepository[T](connection: Connection) {
   import BaseRepositoryTypes._
 
   import org.neo4j.driver.v1.AuthTokens
 
   import org.neo4j.driver.v1.GraphDatabase
 
-  private val uri = "bolt://localhost:17687"
   private val driver:Driver =
-    GraphDatabase.driver(uri, AuthTokens.basic("neo4j", "password"))
+    GraphDatabase.driver(connection.uri, AuthTokens.basic(connection.username, connection.password))
 
   val kind:String
   val recordMap:Value => T

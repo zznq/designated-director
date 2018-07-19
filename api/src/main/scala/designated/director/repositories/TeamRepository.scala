@@ -3,7 +3,7 @@ package designated.director.repositories
 import designated.director.actors.Team
 import org.neo4j.driver.v1.Value
 
-case class TeamRepository() extends BaseRepository[Team] {
+case class TeamRepository(conn: Connection) extends BaseRepository[Team](conn) {
   val kind:String = "Team"
 
   val recordMap:Value => Team = r => {
