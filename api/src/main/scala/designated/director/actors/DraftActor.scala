@@ -1,34 +1,40 @@
 package designated.director.actors
 
-import akka.actor.{ Actor, ActorLogging, Props }
+import java.util.UUID
+
+import akka.actor.{Actor, ActorLogging, Props}
+import akka.pattern.pipe
+import designated.director.repositories.BaseRepository
 
 final case class Draft(id: String, name: String, numOfRounds: Int, numOfTeams: Int)
+final case class DraftPost(name: String, numOfRounds: Int, numOfTeams: Int)
 final case class Drafts(drafts: Seq[Draft])
 
 object DraftActor {
   final case object GetDrafts
-  final case class CreateDraft(draft: Draft)
+  final case class CreateDraft(draft: DraftPost)
   final case class GetDraft(id: String)
   final case class DeleteDraft(id: String)
 
   def props: Props = Props[DraftActor]
+  def props(repository: BaseRepository[Draft]): Props = Props(new DraftActor(repository))
 }
 
-class DraftActor extends Actor with ActorLogging {
+class DraftActor(respository: BaseRepository[Draft]) extends Actor with ActorLogging {
   import DraftActor._
 
-  var drafts = Set.empty[Draft]
+  import context.dispatcher
 
   override def receive: Receive = {
     case GetDrafts =>
-      sender() ! Drafts(drafts.toSeq)
+      val o = respository.getAll.map(Drafts)
+      o pipeTo sender()
     case CreateDraft(draft) =>
-      drafts += draft
-      sender() ! draft
+      val d = Draft(UUID.randomUUID().toString, draft.name, draft.numOfRounds, draft.numOfTeams)
+      respository.create(d) pipeTo sender()
     case GetDraft(id) =>
-      sender() ! drafts.find(_.id == id)
+      respository get id pipeTo sender()
     case DeleteDraft(id) =>
-      drafts.find(_.id == id) foreach { draft => drafts -= draft }
-      sender() ! "Deleted"
+      respository delete id pipeTo sender()
   }
 }

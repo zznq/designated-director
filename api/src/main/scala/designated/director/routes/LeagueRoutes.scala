@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.pattern.ask
 import akka.util.Timeout
 import designated.director.actors.LeagueActor.{CreateLeague, DeleteLeauge, GetLeague, GetLeagues}
-import designated.director.actors.{League, LeaguePost, Leagues}
+import designated.director.actors._
 import designated.director.api.JsonSupport
 import designated.director.repositories.BaseRepositoryTypes.DeleteResult
 
@@ -25,44 +25,43 @@ trait LeagueRoutes extends JsonSupport {
 
   implicit lazy val ltimeout: Timeout = Timeout(5.seconds)
 
-  lazy val leagueRoutes: Route =
+  def leagueRoutes(routes: Seq[String => Route]): Route =
     pathPrefix("leagues") {
-      concat(
-        pathEnd {
-          concat(
-            get {
-              val leagues = (leagueActor ? GetLeagues).mapTo[Leagues]
-              complete(leagues)
-            },
-            post {
-              entity(as[LeaguePost]) { e =>
-                val t = (leagueActor ? CreateLeague(e)).mapTo[League]
-                onSuccess(t) { performed =>
-                  llog.info("Created League [{}]", t)
-                  complete((StatusCodes.Created, performed))
-                }
-              }
+      pathEnd {
+        // GET /leagues
+        get {
+          val leagues = (leagueActor ? GetLeagues).mapTo[Leagues]
+          complete(leagues)
+        } ~
+        // POST /leagues
+        post {
+          entity(as[LeaguePost]) { e =>
+            val t = (leagueActor ? CreateLeague(e)).mapTo[League]
+            onSuccess(t) { performed =>
+              llog.info("Created League [{}]", t)
+              complete((StatusCodes.Created, performed))
             }
-          )
-        },
-        pathPrefix(Segment) { id =>
-            concat(
-              get {
-                val l = (leagueActor ? GetLeague(id)).mapTo[Option[League]]
-                rejectEmptyResponse {
-                  complete(l)
-                }
-              },
-              delete {
-                val l = (leagueActor ? DeleteLeauge(id)).mapTo[DeleteResult]
-                onSuccess(l) { performed =>
-                  llog.info("Delete League [{}]", l)
-                  complete((StatusCodes.OK, performed.right.get.toString))
-                }
-              }
-            )
-
+          }
         }
-      )
+      } ~
+      pathPrefix(Segment) { id =>
+        // Add routes under /leageus/{id} route
+        concat(routes.map(_(id)): _*) ~
+        // GET /leagues/{id}
+        get {
+          val l = (leagueActor ? GetLeague(id)).mapTo[Option[League]]
+          rejectEmptyResponse {
+            complete(l)
+          }
+        } ~
+        // DELETE /leagues/{id}
+        delete {
+          val l = (leagueActor ? DeleteLeauge(id)).mapTo[DeleteResult]
+          onSuccess(l) { performed =>
+            llog.info("Delete League [{}]", l)
+            complete((StatusCodes.OK, performed.right.get.toString))
+          }
+        }
+      }
     }
 }

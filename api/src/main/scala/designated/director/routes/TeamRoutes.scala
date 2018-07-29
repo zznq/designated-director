@@ -25,45 +25,42 @@ trait TeamRoutes extends JsonSupport {
 
   implicit lazy val ttimeout: Timeout = Timeout(5.seconds)
 
-  lazy val teamRoutes: Route =
+  def teamRoutes(leagueId: String): Route =
     pathPrefix("teams") {
-      concat(
-        pathEnd {
-          concat(
-            get {
-              val ts = (teamActor ? GetTeams).mapTo[Teams]
-              val teams = ts.mapTo[Teams]
-              complete(teams)
-            },
-            post {
-              entity(as[TeamPost]) { e =>
-                val t = (teamActor ? CreateTeam(e)).mapTo[Team]
-                onSuccess(t) { performed =>
-                  tlog.info("Created Team [{}]", t)
-                  complete((StatusCodes.Created, performed))
-                }
-              }
+      pathEnd {
+        // GET /teams
+        get {
+          val ts = (teamActor ? GetTeams(leagueId)).mapTo[Teams]
+          val teams = ts.mapTo[Teams]
+          complete(teams)
+        } ~
+        // POST /teams
+        post {
+          entity(as[TeamPost]) { e =>
+            val t = (teamActor ? CreateTeam(leagueId, e)).mapTo[Team]
+            onSuccess(t) { performed =>
+              tlog.info("Created Team [{}]", t)
+              complete((StatusCodes.Created, performed))
             }
-          )
-        },
-        pathPrefix(Segment) { id =>
-          concat(
-            get {
-              val t = (teamActor ? GetTeam(id)).mapTo[Option[Team]]
-              rejectEmptyResponse {
-                complete(t)
-              }
-            },
-            delete {
-              val t = (teamActor ? DeleteTeam(id)).mapTo[DeleteResult]
-              onSuccess(t) { performed =>
-                tlog.info("Delete Team [{}]", t)
-                complete((StatusCodes.OK, performed.right.get.toString))
-              }
-            }
-          )
-
+          }
         }
-      )
+      } ~
+      pathPrefix(Segment) { id =>
+        // GET /teams/{id}
+        get {
+          val t = (teamActor ? GetTeam(leagueId, id)).mapTo[Option[Team]]
+          rejectEmptyResponse {
+            complete(t)
+          }
+        } ~
+        // DELETE /teams/{id}
+        delete {
+          val t = (teamActor ? DeleteTeam(leagueId, id)).mapTo[DeleteResult]
+          onSuccess(t) { performed =>
+            tlog.info("Delete Team [{}]", t)
+            complete((StatusCodes.OK, performed.right.get.toString))
+          }
+        }
+      }
     }
 }
