@@ -12,7 +12,7 @@ trait JsonSupport extends SprayJsonSupport {
   implicit val draftPostJsonFormat: RootJsonFormat[DraftPost] = jsonFormat3(DraftPost)
   implicit val draftsJsonFormat: RootJsonFormat[Drafts] = jsonFormat1(Drafts)
 
-  implicit val teamJsonFormat: RootJsonFormat[Team] = jsonFormat2(Team)
+  implicit val teamJsonFormat: RootJsonFormat[Team] = jsonFormat3(Team)
   implicit val teamPostJsonFormat: RootJsonFormat[TeamPost] = jsonFormat1(TeamPost)
   implicit val teamsJsonFormat: RootJsonFormat[Teams] = jsonFormat1(Teams)
 

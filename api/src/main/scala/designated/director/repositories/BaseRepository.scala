@@ -83,7 +83,7 @@ abstract class BaseRepository[T](connection: Connection) {
   }
   
 
-  private def runQuery[U](statement:Statement, queryMap:StatementResult => U)(implicit ex:ExecutionContext): U = {
+  private[repositories] def runQuery[U](statement:Statement, queryMap:StatementResult => U)(implicit ex:ExecutionContext): U = {
     val session = driver.session()
 
     val t = session.readTransaction(new TransactionWork[U]() {
