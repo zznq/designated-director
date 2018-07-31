@@ -19,7 +19,7 @@ abstract class BaseRepository[T](connection: Connection) {
 
   import org.neo4j.driver.v1.GraphDatabase
 
-  private val driver:Driver =
+  private[repositories] val driver:Driver =
     GraphDatabase.driver(connection.uri, AuthTokens.basic(connection.username, connection.password))
 
   val kind:String
@@ -81,7 +81,7 @@ abstract class BaseRepository[T](connection: Connection) {
 
     Future(t)
   }
-  
+
 
   private[repositories] def runQuery[U](statement:Statement, queryMap:StatementResult => U)(implicit ex:ExecutionContext): U = {
     val session = driver.session()

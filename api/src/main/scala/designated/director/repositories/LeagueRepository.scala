@@ -1,7 +1,9 @@
 package designated.director.repositories
 
 import designated.director.actors.League
-import org.neo4j.driver.v1.Value
+import org.neo4j.driver.v1.{Record, Statement, Value, Values}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class LeagueRepository(conn: Connection) extends BaseRepository[League](conn) {
   val kind:String = "League"
