@@ -70,4 +70,4 @@ DELETE  /team/{team id}
 ```
 
 
-![forthebadge](https://forthebadge.com/images/badges/powered-by-electricity.svg)
+![forthebadge](https://forthebadge.com/images/badges/made-with-crayons.svg)
