@@ -5,6 +5,9 @@ import org.neo4j.driver.v1._
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
+import scala.compat.java8.FutureConverters._
+import scala.collection.JavaConverters._
+
 case class Connection(uri:String, username: String, password: String)
 
 object BaseRepositoryTypes{
@@ -12,6 +15,7 @@ object BaseRepositoryTypes{
   type AllResults[T] = Seq[T]
 }
 
+//TODO: Finish making all methods async
 abstract class BaseRepository[T](connection: Connection) {
   import BaseRepositoryTypes._
 
@@ -28,32 +32,26 @@ abstract class BaseRepository[T](connection: Connection) {
   val insert: T => String
 
   def getAll(implicit ex:ExecutionContext): Future[AllResults[T]] = {
-    val t = runQuery(
+    runQueryListAsync(
       new Statement(s"MATCH (n:$kind) RETURN n;"),
-      rs => {
-        rs.list(r => { recordMap(r.get("n")) }).asScala
+      r => {
+        recordMap(r.get("n"))
       }
     )
-
-    Future(t)
   }
 
   def get(id: String)(implicit ex:ExecutionContext): Future[Option[T]] = {
-    val t = runQuery(
+    runQueryAsync(
       new Statement(s"MATCH (n:$kind) Where n.id = {id} RETURN n;", Values.parameters("id", id)),
-      rs => {
-        if(rs.hasNext) {
-          val r = rs.single()
-          Some(recordMap(r.get("n")))
-        } else {
+      r => {
+        if(r == null) {
           None
+        } else {
+          Some(recordMap(r.get("n")))
         }
       }
     )
-
-    Future(t)
   }
-
 
   def create(record: T)(implicit ex:ExecutionContext): Future[T] = {
     val statement = s"""CREATE (${key(record)}:$kind ${insert(record)})"""
@@ -82,6 +80,39 @@ abstract class BaseRepository[T](connection: Connection) {
     Future(t)
   }
 
+  private[repositories] def runQueryAsync[U](statement:Statement, queryMap:Record => U)(implicit ex:ExecutionContext): Future[U] = {
+    val session = driver.session()
+
+    session.runAsync(statement)
+      .thenCompose(cursor => {
+        cursor.singleAsync()
+      })
+      .thenCompose(record => {
+        session.closeAsync()
+          .thenApply[U](_ => queryMap(record))
+      })
+      .exceptionally(ex => {
+        ex.printStackTrace()
+        queryMap(null)
+      })
+      .toScala
+  }
+
+  private[repositories] def runQueryListAsync[U](statement:Statement, queryMap:Record => U)(implicit ex:ExecutionContext): Future[AllResults[U]] = {
+    val session = driver.session()
+
+    session.runAsync(statement)
+      .thenCompose(cursor => {
+        cursor.listAsync(record => queryMap(record))
+      })
+      .thenCompose(record => {
+        session.closeAsync()
+          .thenApply[java.util.List[U]](_ => record)
+      })
+      .toScala
+      .mapTo[java.util.List[U]]
+      .map(l => l.asScala)
+  }
 
   private[repositories] def runQuery[U](statement:Statement, queryMap:StatementResult => U)(implicit ex:ExecutionContext): U = {
     val session = driver.session()

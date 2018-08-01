@@ -9,6 +9,7 @@ import java.time.Year
 import scala.collection.JavaConverters._
 import designated.director.repositories.BaseRepositoryTypes.{AllResults, DeleteResult}
 
+//TODO: Make all methods async
 case class TeamRepository(conn: Connection) extends BaseRepository[Team](conn) {
   val kind:String = "Team"
 
