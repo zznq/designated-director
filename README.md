@@ -2,12 +2,12 @@
 
 A small utlitly to help manager live draft day.
 
-## Dependancies
-
+## Dependencies
   - neo4j (use docker-compose)
-  - jdk 1.8
+    - [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
+  - JDK 1.8
     - `brew cask install java8`
-  - sbt
+  - SBT
     - `brew install sbt`
 
 ## Building
@@ -18,10 +18,14 @@ $ sbt compile
 
 ## Running
 
+Neo4j:
 ```
-$ sbt
-$ project api
-$ run
+docker-compose -f docker/docker-compose.yml up
+```
+
+Application:
+```bash
+$ sbt 'project api' run
 ```
 
 ## API
@@ -52,7 +56,7 @@ POST /teams
 ```
 
 body
-``` javascript
+``` json
 {
 	"name": "Boom goes the roof"
 }
@@ -65,3 +69,5 @@ url
 DELETE  /team/{team id}
 ```
 
+
+![forthebadge](https://forthebadge.com/images/badges/made-with-crayons.svg)
