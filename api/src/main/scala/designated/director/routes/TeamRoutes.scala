@@ -46,19 +46,23 @@ trait TeamRoutes extends JsonSupport {
         }
       } ~
       pathPrefix(Segment) { id =>
-        // GET /teams/{id}
-        get {
-          val t = (teamActor ? GetTeam(leagueId, id)).mapTo[Option[Team]]
-          rejectEmptyResponse {
-            complete(t)
-          }
-        } ~
-        // DELETE /teams/{id}
-        delete {
-          val t = (teamActor ? DeleteTeam(leagueId, id)).mapTo[DeleteResult]
-          onSuccess(t) { performed =>
-            tlog.info("Delete Team [{}]", t)
-            complete((StatusCodes.OK, performed.right.get.toString))
+        pathEnd {
+          // GET /teams/{id}
+          get {
+            val t = (teamActor ? GetTeam(leagueId, id)).mapTo[Option[Team]]
+            onSuccess(t) { out =>
+              val toStatusCode = out.map { _ => StatusCodes.OK }.getOrElse(StatusCodes.NotFound)
+
+              complete((toStatusCode, out))
+            }
+          } ~
+          // DELETE /teams/{id}
+          delete {
+            val t = (teamActor ? DeleteTeam(leagueId, id)).mapTo[DeleteResult]
+            onSuccess(t) { performed =>
+              tlog.info("Delete Team [{}]", t)
+              complete((StatusCodes.OK, performed.right.get.toString))
+            }
           }
         }
       }

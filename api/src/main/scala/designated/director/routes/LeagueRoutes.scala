@@ -47,19 +47,21 @@ trait LeagueRoutes extends JsonSupport {
       pathPrefix(Segment) { id =>
         // Add routes under /leageus/{id} route
         concat(routes.map(_(id)): _*) ~
-        // GET /leagues/{id}
-        get {
-          val l = (leagueActor ? GetLeague(id)).mapTo[Option[League]]
-          rejectEmptyResponse {
-            complete(l)
-          }
-        } ~
-        // DELETE /leagues/{id}
-        delete {
-          val l = (leagueActor ? DeleteLeauge(id)).mapTo[DeleteResult]
-          onSuccess(l) { performed =>
-            llog.info("Delete League [{}]", l)
-            complete((StatusCodes.OK, performed.right.get.toString))
+        pathEnd {
+          // GET /leagues/{id}
+          get {
+            val l = (leagueActor ? GetLeague(id)).mapTo[Option[League]]
+            rejectEmptyResponse {
+              complete(l)
+            }
+          } ~
+            // DELETE /leagues/{id}
+          delete {
+            val l = (leagueActor ? DeleteLeauge(id)).mapTo[DeleteResult]
+            onSuccess(l) { performed =>
+              llog.info("Delete League [{}]", l)
+              complete((StatusCodes.OK, performed.right.get.toString))
+            }
           }
         }
       }
