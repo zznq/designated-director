@@ -29,14 +29,12 @@ trait DraftRoutes extends JsonSupport {
 
   lazy val draftRoutes: Route =
     pathPrefix("drafts") {
-      concat(
         //# Draft Status
         pathEnd {
-          concat(
-            get {
-              val drafts = (draftActor ? GetDrafts).mapTo[Drafts]
-              complete(drafts)
-            },
+          get {
+            val drafts = (draftActor ? GetDrafts).mapTo[Drafts]
+            complete(drafts)
+          } ~
             post {
               entity(as[DraftPost]) { e =>
                 val d = (draftActor ? CreateDraft(e)).mapTo[Draft]
@@ -46,16 +44,17 @@ trait DraftRoutes extends JsonSupport {
                 }
               }
             }
-          )
-        },
+        } ~
         pathPrefix(Segment) { id =>
-          concat(
+          pathEnd {
             get {
               val d = (draftActor ? GetDraft(id)).mapTo[Option[Draft]]
-              rejectEmptyResponse {
-                complete(d)
+              onSuccess(d) { out =>
+                val toStatusCode = out.map { _ => StatusCodes.OK }.getOrElse(StatusCodes.NotFound)
+
+                complete((toStatusCode, out))
               }
-            },
+            } ~
             delete {
               val d = (draftActor ? DeleteDraft(id)).mapTo[DeleteResult]
               onSuccess(d) { performed =>
@@ -63,9 +62,7 @@ trait DraftRoutes extends JsonSupport {
                 complete((StatusCodes.OK, performed.right.get.toString))
               }
             }
-          )
-
+          }
         }
-      )
     }
 }
