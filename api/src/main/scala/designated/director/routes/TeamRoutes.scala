@@ -37,10 +37,13 @@ trait TeamRoutes extends JsonSupport {
         // POST /teams
         post {
           entity(as[TeamPost]) { e =>
-            val t = (teamActor ? CreateTeam(leagueId, e)).mapTo[Team]
+            val t = (teamActor ? CreateTeam(leagueId, e)).mapTo[CreateResult[Team]]
             onSuccess(t) { performed =>
               tlog.info("Created Team [{}]", t)
-              complete((StatusCodes.Created, performed))
+              performed match {
+                case Right(l) => complete((StatusCodes.Created, l))
+                case Left(message) => complete((StatusCodes.InternalServerError, message))
+              }
             }
           }
         }
@@ -61,7 +64,10 @@ trait TeamRoutes extends JsonSupport {
             val t = (teamActor ? DeleteTeam(leagueId, id)).mapTo[DeleteResult]
             onSuccess(t) { performed =>
               tlog.info("Delete Team [{}]", t)
-              complete((StatusCodes.OK, performed.right.get.toString))
+              performed match {
+                case Right(r) => complete((StatusCodes.OK, r.toString))
+                case Left(message) => complete((StatusCodes.InternalServerError, message))
+              }
             }
           }
         }

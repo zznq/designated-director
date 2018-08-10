@@ -4,14 +4,15 @@ import org.neo4j.driver.v1._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
-
 import scala.compat.java8.FutureConverters._
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 case class Connection(uri:String, username: String, password: String)
 
 object BaseRepositoryTypes{
   type DeleteResult = Either[String, Boolean]
+  type CreateResult[T] = Either[String, T]
   type AllResults[T] = Seq[T]
 }
 
@@ -53,31 +54,53 @@ abstract class BaseRepository[T](connection: Connection) {
     )
   }
 
-  def create(record: T)(implicit ex:ExecutionContext): Future[T] = {
+  private[repositories] def tryToCreateResult(record: T, t: Try[String]): CreateResult[T] = t match {
+    case Success(v) => Right(record)
+    case Failure(e) => Left(e.getLocalizedMessage)
+  }
+
+  private[repositories] def tryToDeleteResult(t: Try[String]): DeleteResult = t match {
+    case Success(v) => Right(true)
+    case Failure(e) => Left(e.getLocalizedMessage)
+  }
+
+  def create(record: T)(implicit ex:ExecutionContext): Future[CreateResult[T]] = {
     val statement = s"""CREATE (${key(record)}:$kind ${insert(record)})"""
 
-    val t = runQuery(
+    runCommandAsync[CreateResult[T]](
       new Statement(statement),
-      _ => {
-        record
-      }
+      r => tryToCreateResult(record, r)
     )
-
-    Future(t)
   }
 
   def delete(id: String)(implicit ex:ExecutionContext): Future[DeleteResult] = {
-    val t = runQuery[DeleteResult](
-      new Statement(
-        s"""MATCH (k:$kind { id: {id} }) DETACH DELETE k""",
-        Values.parameters("id", id)
-      ),
-      _ => {
-        Right(true)
-      }
+    val statement = new Statement(
+      s"""MATCH (k:$kind { id: {id} }) DETACH DELETE k""",
+      Values.parameters("id", id)
     )
 
-    Future(t)
+    runCommandAsync[DeleteResult](
+      statement,
+      r => tryToDeleteResult(r)
+    )
+  }
+
+  private[repositories] def runCommandAsync[U](statement:Statement, queryMap:Try[String] => U)(implicit ex:ExecutionContext): Future[U] = {
+    val session = driver.session()
+
+    session.runAsync(statement)
+      .thenCompose(cursor => {
+        cursor.consumeAsync()
+      })
+      .thenCompose(summary => {
+        session.closeAsync()
+          .thenApply[U](_ => queryMap(Success(summary.toString)))
+      })
+      .exceptionally(ex => {
+        ex.printStackTrace()
+        queryMap(Failure(ex))
+      })
+      .toScala
   }
 
   private[repositories] def runQueryAsync[U](statement:Statement, queryMap:Record => U)(implicit ex:ExecutionContext): Future[U] = {
