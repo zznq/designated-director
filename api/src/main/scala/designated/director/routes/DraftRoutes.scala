@@ -14,7 +14,7 @@ import designated.director.actors.{Draft, DraftPost, Drafts}
 import scala.concurrent.duration._
 import akka.pattern.ask
 import designated.director.api.JsonSupport
-import designated.director.repositories.BaseRepositoryTypes.{CreateResult, DeleteResult}
+import designated.director.repositories.BaseRepositoryTypes.Result
 
 trait DraftRoutes extends JsonSupport {
   implicit def system: ActorSystem
@@ -37,7 +37,7 @@ trait DraftRoutes extends JsonSupport {
           } ~
             post {
               entity(as[DraftPost]) { e =>
-                val d = (draftActor ? CreateDraft(e)).mapTo[CreateResult[Draft]]
+                val d = (draftActor ? CreateDraft(e)).mapTo[Result[Draft]]
                 onSuccess(d) { performed =>
                   log.info("Created draft [{}]", d)
                   performed match {
@@ -52,14 +52,12 @@ trait DraftRoutes extends JsonSupport {
           pathEnd {
             get {
               val d = (draftActor ? GetDraft(id)).mapTo[Option[Draft]]
-              onSuccess(d) { out =>
-                val toStatusCode = out.map { _ => StatusCodes.OK }.getOrElse(StatusCodes.NotFound)
-
-                complete((toStatusCode, out))
+              rejectEmptyResponse {
+                complete(d)
               }
             } ~
             delete {
-              val d = (draftActor ? DeleteDraft(id)).mapTo[DeleteResult]
+              val d = (draftActor ? DeleteDraft(id)).mapTo[Result[Boolean]]
               onSuccess(d) { performed =>
                 log.info("Delete Draft [{}]", d)
                 performed match {

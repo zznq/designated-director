@@ -12,7 +12,7 @@ import akka.util.Timeout
 import designated.director.actors.LeagueActor.{CreateLeague, DeleteLeauge, GetLeague, GetLeagues}
 import designated.director.actors._
 import designated.director.api.JsonSupport
-import designated.director.repositories.BaseRepositoryTypes.{CreateResult, DeleteResult}
+import designated.director.repositories.BaseRepositoryTypes.Result
 
 import scala.concurrent.duration._
 
@@ -36,7 +36,7 @@ trait LeagueRoutes extends JsonSupport {
         // POST /leagues
         post {
           entity(as[LeaguePost]) { e =>
-            val t = (leagueActor ? CreateLeague(e)).mapTo[CreateResult[League]]
+            val t = (leagueActor ? CreateLeague(e)).mapTo[Result[League]]
             onSuccess(t) { performed =>
               llog.info("Created League [{}]", t)
               performed match {
@@ -60,7 +60,7 @@ trait LeagueRoutes extends JsonSupport {
           } ~
             // DELETE /leagues/{id}
           delete {
-            val l = (leagueActor ? DeleteLeauge(id)).mapTo[DeleteResult]
+            val l = (leagueActor ? DeleteLeauge(id)).mapTo[Result[Boolean]]
             onSuccess(l) { performed =>
               llog.info("Delete League [{}]", l)
               performed match {

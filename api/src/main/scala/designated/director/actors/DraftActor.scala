@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
-import designated.director.repositories.BaseRepository
+import designated.director.repositories.{BaseRepository, Repository}
 
 final case class Draft(id: String, name: String, numOfRounds: Int, numOfTeams: Int)
 final case class DraftPost(name: String, numOfRounds: Int, numOfTeams: Int)
@@ -17,10 +17,10 @@ object DraftActor {
   final case class DeleteDraft(id: String)
 
   def props: Props = Props[DraftActor]
-  def props(repository: BaseRepository[Draft]): Props = Props(new DraftActor(repository))
+  def props(repository: Repository[Draft]): Props = Props(new DraftActor(repository))
 }
 
-class DraftActor(respository: BaseRepository[Draft]) extends Actor with ActorLogging {
+class DraftActor(respository: Repository[Draft]) extends Actor with ActorLogging {
   import DraftActor._
 
   import context.dispatcher
