@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
-import designated.director.repositories.BaseRepository
+import designated.director.repositories.{BaseRepository, Repository}
 
 final case class League(id: String, name: String)
 final case class LeaguePost(name: String)
@@ -17,10 +17,10 @@ object LeagueActor {
   final case class DeleteLeauge(id: String)
 
   def props: Props = Props[LeagueActor]
-  def props(repository: BaseRepository[League]): Props = Props(new LeagueActor(repository))
+  def props(repository: Repository[League]): Props = Props(new LeagueActor(repository))
 }
 
-class LeagueActor(repository: BaseRepository[League]) extends Actor with ActorLogging {
+class LeagueActor(repository: Repository[League]) extends Actor with ActorLogging {
   import LeagueActor._
 
   import context.dispatcher
