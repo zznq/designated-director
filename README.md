@@ -4,6 +4,7 @@ A small utlitly to help manager live draft day.
 
 [![Build Status](https://travis-ci.org/zznq/designated-director.svg?branch=master)](https://travis-ci.org/zznq/designated-director) 
 [![Maintainability](https://api.codeclimate.com/v1/badges/1349e51a942942c4c486/maintainability)](https://codeclimate.com/github/zznq/designated-director/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/1349e51a942942c4c486/test_coverage)](https://codeclimate.com/github/zznq/designated-director/test_coverage)
 
 ## Dependencies
   - neo4j (use docker-compose)
