@@ -2,6 +2,8 @@
 
 A small utlitly to help manager live draft day.
 
+<a href="https://codeclimate.com/github/zznq/designated-director/maintainability"><img src="https://api.codeclimate.com/v1/badges/1349e51a942942c4c486/maintainability" /></a>
+
 ## Dependencies
   - neo4j (use docker-compose)
     - [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
