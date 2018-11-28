@@ -8,6 +8,8 @@ lazy val akkaHttpVersion  = "10.1.5"
 lazy val akkaVersion      = "2.5.18"
 lazy val scalaTestVersion = "3.0.5"
 
+lazy val coverageEnabled = true
+
 lazy val api = (project in file ("./api"))
   .settings(
     inThisBuild(List(
