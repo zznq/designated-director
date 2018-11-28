@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import designated.director.actors.{Team, TeamPost, Teams}
 import designated.director.actors.TeamActor.{CreateTeam, DeleteTeam, GetTeam, GetTeams}
 import designated.director.api.JsonSupport
-import designated.director.repositories.BaseRepositoryTypes.Result
+import designated.director.repositories.RepositoryTypes.{CreateResult, DeleteResult}
 
 trait TeamRoutes extends JsonSupport {
   implicit def system: ActorSystem
@@ -37,7 +37,7 @@ trait TeamRoutes extends JsonSupport {
         // POST /teams
         post {
           entity(as[TeamPost]) { e =>
-            val t = (teamActor ? CreateTeam(leagueId, e)).mapTo[Result[Team]]
+            val t = (teamActor ? CreateTeam(leagueId, e)).mapTo[CreateResult[Team]]
             onSuccess(t) { performed =>
               tlog.info("Created Team [{}]", t)
               performed match {
@@ -53,13 +53,14 @@ trait TeamRoutes extends JsonSupport {
           // GET /teams/{id}
           get {
             val t = (teamActor ? GetTeam(leagueId, id)).mapTo[Option[Team]]
-            rejectEmptyResponse {
-              complete(t)
+            onSuccess(t) {
+              case Some(team) => complete(StatusCodes.OK, team)
+              case None => complete(StatusCodes.NotFound, s"No team found in league $leagueId with id $id")
             }
           } ~
           // DELETE /teams/{id}
           delete {
-            val t = (teamActor ? DeleteTeam(leagueId, id)).mapTo[Result[Boolean]]
+            val t = (teamActor ? DeleteTeam(leagueId, id)).mapTo[DeleteResult]
             onSuccess(t) { performed =>
               tlog.info("Delete Team [{}]", t)
               performed match {

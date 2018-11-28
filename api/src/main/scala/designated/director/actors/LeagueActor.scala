@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
-import designated.director.repositories.{BaseRepository, Repository}
+import designated.director.repositories.Repository
 
 final case class League(id: String, name: String)
 final case class LeaguePost(name: String)
