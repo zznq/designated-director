@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import designated.director.actors.{Team, TeamActor, Teams}
+import designated.director.api.IdGenerator
 import designated.director.repositories.RepositoryTypes.{AllResults, CreateResult, DeleteResult}
 import designated.director.repositories.SubRepository
 import org.scalatest.{FunSpec, Matchers}
@@ -56,9 +57,12 @@ case class MockTeamRepository() extends SubRepository[Team] {
   }
 }
 
-class TeamRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with TeamRoutes {
+case class MockIdGenerator() extends IdGenerator[String] {
+  override def getNewId: String = "2"
+}
 
-  val teamActor: ActorRef = system.actorOf(TeamActor.props(MockTeamRepository()), "teamActor")
+class TeamRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with TeamRoutes {
+  val teamActor: ActorRef = system.actorOf(TeamActor.props(MockTeamRepository(), MockIdGenerator()), "teamActor")
 
   describe("Team Routes") {
     describe("/teams") {
@@ -69,6 +73,35 @@ class TeamRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with 
             status should === (StatusCodes.OK)
             responseAs[Teams] shouldBe Teams(Seq[Team](Team("1", "1", "First")))
             responseAs[String] shouldBe """{"teams":[{"leagueId":"1","id":"1","name":"First"}]}"""
+          }
+        }
+
+        it("returns a 404 response for missing League") {
+          Get("/teams") ~> teamRoutes("1000") ~> check {
+            handled shouldBe true
+            status shouldBe StatusCodes.OK
+            responseAs[Teams] shouldBe Teams(Seq.empty[Team])
+            responseAs[String] shouldBe """{"teams":[]}"""
+          }
+        }
+      }
+
+      describe("POST /teams") {
+        it("returns created team") {
+          val t = Team("1", "2", "Test Team")
+          Post("/teams", t) ~> teamRoutes("1") ~> check {
+            handled shouldBe true
+            status shouldBe StatusCodes.Created
+            responseAs[Team] shouldBe t
+            responseAs[String] shouldBe """{"leagueId":"1","id":"2","name":"Test Team"}"""
+          }
+        }
+        it("returns 500 when record can't be created") {
+          val t = Team("2", "2", "Test Team")
+          Post("/teams", t) ~> teamRoutes("2") ~> check {
+            handled shouldBe true
+            status shouldBe StatusCodes.InternalServerError
+            responseAs[String] shouldBe """Record Can't Be Created"""
           }
         }
       }
@@ -82,14 +115,14 @@ class TeamRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with 
             responseAs[String] shouldBe """{"leagueId":"1","id":"1","name":"First"}"""
           }
         }
-        it("returns a 404 response") {
+        it("returns a 404 response for missing Team") {
           Get("/teams/10000") ~> teamRoutes("1") ~> check {
             handled shouldBe true
             status shouldBe StatusCodes.NotFound
             responseAs[String] shouldBe """No team found in league 1 with id 10000"""
           }
         }
-        it("returns a 404 response for missing league") {
+        it("returns a 404 response for missing League") {
           Get("/teams/1") ~> teamRoutes("1000") ~> check {
             handled shouldBe true
             status shouldBe StatusCodes.NotFound

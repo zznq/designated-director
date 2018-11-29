@@ -1,9 +1,10 @@
 package designated.director.actors
 
-import java.util.UUID
+
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
-import designated.director.repositories.{SubRepository}
+import designated.director.api.IdGenerator
+import designated.director.repositories.SubRepository
 
 final case class Team(leagueId: String, id: String, name: String)
 final case class TeamPost(name: String)
@@ -16,11 +17,10 @@ object TeamActor {
   final case class DeleteTeam(leagueId: String, id: String)
 
   def props: Props = Props[TeamActor]
-
-  def props(repository: SubRepository[Team]): Props = Props(new TeamActor(repository))
+  def props(repository: SubRepository[Team], idGenerator: IdGenerator[String]): Props = Props(new TeamActor(repository, idGenerator))
 }
 
-class TeamActor(repository:SubRepository[Team]) extends Actor with ActorLogging {
+class TeamActor(repository:SubRepository[Team], idGenerator: IdGenerator[String]) extends Actor with ActorLogging {
   import TeamActor.{GetTeams,CreateTeam,GetTeam,DeleteTeam}
   import context.dispatcher
 
@@ -29,7 +29,7 @@ class TeamActor(repository:SubRepository[Team]) extends Actor with ActorLogging 
       val o = repository.getAll(leagueId).map(Teams)
       o pipeTo sender()
     case CreateTeam(leagueId, team) =>
-      val t = Team(leagueId, UUID.randomUUID().toString, team.name)
+      val t = Team(leagueId, idGenerator.getNewId, team.name)
       repository.create(t) pipeTo sender()
     case GetTeam(leagueId, id) =>
       repository.get(leagueId, id) pipeTo sender()
