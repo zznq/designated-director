@@ -21,8 +21,7 @@ object LeagueActor {
 }
 
 class LeagueActor(repository: Repository[League]) extends Actor with ActorLogging {
-  import LeagueActor._
-
+  import LeagueActor.{GetLeagues,CreateLeague,GetLeague,DeleteLeauge}
   import context.dispatcher
 
   override def receive: Receive = {

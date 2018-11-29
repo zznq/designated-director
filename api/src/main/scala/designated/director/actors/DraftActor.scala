@@ -22,7 +22,7 @@ object DraftActor {
 }
 
 class DraftActor(respository: Repository[Draft]) extends Actor with ActorLogging {
-  import DraftActor._
+  import DraftActor.{GetDrafts,CreateDraft,GetDraft,DeleteDraft}
 
   import context.dispatcher
 

@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.pattern.ask
 import akka.util.Timeout
 import designated.director.actors.LeagueActor.{CreateLeague, DeleteLeauge, GetLeague, GetLeagues}
-import designated.director.actors._
+import designated.director.actors.{League,Leagues,LeaguePost}
 import designated.director.api.JsonSupport
 import designated.director.repositories.RepositoryTypes.{CreateResult, DeleteResult}
 
