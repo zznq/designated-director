@@ -50,10 +50,8 @@ case class MockTeamRepository() extends SubRepository[Team] {
     if(out.isDefined) {
       Future(Right(true))
     } else {
-      Future(Left("Record Doesn't Exist"))
+      Future(Left("Failed to Delete Team"))
     }
-
-
   }
 }
 
@@ -127,6 +125,24 @@ class TeamRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with 
             handled shouldBe true
             status shouldBe StatusCodes.NotFound
             responseAs[String] shouldBe """No team found in league 1000 with id 1"""
+          }
+        }
+      }
+
+      describe("DELETE /teams/{id}") {
+        it("returns created team") {
+          Delete("/teams/1") ~> teamRoutes("1") ~> check {
+            handled shouldBe true
+            status shouldBe StatusCodes.OK
+            responseAs[String] shouldBe s"Deleted team in league 1 with id 1"
+          }
+        }
+        it("returns 500 when record can't be created") {
+          val t = Team("2", "2", "Test Team")
+          Delete("/teams/1000") ~> teamRoutes("2") ~> check {
+            handled shouldBe true
+            status shouldBe StatusCodes.InternalServerError
+            responseAs[String] shouldBe """Failed to Delete Team"""
           }
         }
       }

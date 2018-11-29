@@ -64,7 +64,7 @@ trait TeamRoutes extends JsonSupport {
             onSuccess(t) { performed =>
               tlog.info("Delete Team [{}]", t)
               performed match {
-                case Right(r) => complete((StatusCodes.OK, r.toString))
+                case Right(r) => complete((StatusCodes.OK, s"Deleted team in league $leagueId with id $id"))
                 case Left(message) => complete((StatusCodes.InternalServerError, message))
               }
             }
