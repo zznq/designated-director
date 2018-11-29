@@ -1,11 +1,9 @@
 package designated.director.repositories
 
 import scala.concurrent.{ExecutionContext, Future}
-
 import scala.compat.java8.FutureConverters._
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-
 import org.neo4j.driver.v1._
 
 
@@ -13,10 +11,8 @@ case class Connection(uri:String, username: String, password: String)
 
 //TODO: Finish making all methods async
 abstract class Neo4jRepository[T](connection: Connection) extends Repository[T] {
-  import RepositoryTypes._
-
+  import RepositoryTypes.{AllResults,CreateResult,DeleteResult}
   import org.neo4j.driver.v1.AuthTokens
-
   import org.neo4j.driver.v1.GraphDatabase
 
   private[repositories] val driver:Driver =

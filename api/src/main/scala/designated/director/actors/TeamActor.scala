@@ -1,10 +1,9 @@
 package designated.director.actors
 
 import java.util.UUID
-
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
-import designated.director.repositories.{SubLeaugeRepository}
+import designated.director.repositories.{SubRepository}
 
 final case class Team(leagueId: String, id: String, name: String)
 final case class TeamPost(name: String)
@@ -18,13 +17,11 @@ object TeamActor {
 
   def props: Props = Props[TeamActor]
 
-  def props(repository: SubLeaugeRepository[Team]): Props = Props(new TeamActor(repository))
+  def props(repository: SubRepository[Team]): Props = Props(new TeamActor(repository))
 }
 
-class TeamActor(repository:SubLeaugeRepository[Team]) extends Actor with ActorLogging {
-
-  import TeamActor._
-
+class TeamActor(repository:SubRepository[Team]) extends Actor with ActorLogging {
+  import TeamActor.{GetTeams,CreateTeam,GetTeam,DeleteTeam}
   import context.dispatcher
 
   override def receive: Receive = {

@@ -5,12 +5,12 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import designated.director.actors.{Team, TeamActor, Teams}
 import designated.director.repositories.RepositoryTypes.{AllResults, CreateResult, DeleteResult}
-import designated.director.repositories.SubLeaugeRepository
+import designated.director.repositories.SubRepository
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MockTeamRepository() extends SubLeaugeRepository[Team] {
+case class MockTeamRepository() extends SubRepository[Team] {
   private val teams = Map[String, Map[String, Team]](
                 "1" -> Map("1" -> Team("1", "1", "First")),
                 "2" -> Map("1" -> Team("2", "1", "Second"), "2" -> Team("2", "2", "Third"))

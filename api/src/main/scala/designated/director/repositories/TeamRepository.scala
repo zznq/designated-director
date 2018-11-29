@@ -8,7 +8,7 @@ import java.time.Year
 
 import designated.director.repositories.RepositoryTypes.{AllResults, CreateResult, DeleteResult}
 
-case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) with SubLeaugeRepository[Team] {
+case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) with SubRepository[Team] {
   val kind:String = "Team"
 
   val recordMap:Value => Team = r => {

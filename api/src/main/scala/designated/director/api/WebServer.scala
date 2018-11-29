@@ -1,6 +1,7 @@
 package designated.director.api
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -12,11 +13,14 @@ import designated.director.routes.{DraftRoutes, LeagueRoutes, TeamRoutes}
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-object WebServer extends App with DraftRoutes with LeagueRoutes with TeamRoutes {
+case class WebServer()
 
+object WebServer extends App with DraftRoutes with LeagueRoutes with TeamRoutes {
   // needed to run the route
   implicit val system: ActorSystem = ActorSystem("DesignatedDirectorWebService")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+  private lazy val log = Logging(system, classOf[WebServer])
 
   val c = Connection("bolt://localhost:17687", "neo4j", "password")
 
@@ -28,7 +32,7 @@ object WebServer extends App with DraftRoutes with LeagueRoutes with TeamRoutes 
 
   Http().bindAndHandle(routes, "localhost", 8080)
 
-  println(s"Server online at http://localhost:8080/")
+  log.info(s"Server online at http://localhost:8080/")
 
   Await.result(system.whenTerminated, Duration.Inf)
 

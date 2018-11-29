@@ -21,7 +21,7 @@ import designated.director.repositories.RepositoryTypes.{CreateResult, DeleteRes
 trait DraftRoutes extends JsonSupport {
   implicit def system: ActorSystem
 
-  lazy val log = Logging(system, classOf[Drafts])
+  lazy val dlog = Logging(system, classOf[Drafts])
 
   // other dependencies that UserRoutes use
   def draftActor: ActorRef
@@ -41,7 +41,7 @@ trait DraftRoutes extends JsonSupport {
               entity(as[DraftPost]) { e =>
                 val d = (draftActor ? CreateDraft(e)).mapTo[CreateResult[Draft]]
                 onSuccess(d) { performed =>
-                  log.info("Created draft [{}]", d)
+                  dlog.info("Created draft [{}]", d)
                   performed match {
                     case Right(l) => complete((StatusCodes.Created, l))
                     case Left(message) => complete((StatusCodes.InternalServerError, message))
@@ -61,7 +61,7 @@ trait DraftRoutes extends JsonSupport {
             delete {
               val d = (draftActor ? DeleteDraft(id)).mapTo[DeleteResult]
               onSuccess(d) { performed =>
-                log.info("Delete Draft [{}]", d)
+                dlog.info("Delete Draft [{}]", d)
                 performed match {
                   case Right(r) => complete((StatusCodes.OK, r.toString))
                   case Left(message) => complete((StatusCodes.InternalServerError, message))
