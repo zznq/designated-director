@@ -26,7 +26,7 @@ object WebServer extends App with DraftRoutes with LeagueRoutes with TeamRoutes 
 
   val draftActor: ActorRef = system.actorOf(DraftActor.props(DraftRepository(c)), "draftActor")
   val leagueActor: ActorRef = system.actorOf(LeagueActor.props(LeagueRepository(c)), "leagueActor")
-  val teamActor: ActorRef = system.actorOf(TeamActor.props(TeamRepository(c)), "teamActor")
+  val teamActor: ActorRef = system.actorOf(TeamActor.props(TeamRepository(c), UUIDGenerator()), "teamActor")
 
   lazy val routes: Route = leagueRoutes(Seq(teamRoutes)) ~ draftRoutes
 
