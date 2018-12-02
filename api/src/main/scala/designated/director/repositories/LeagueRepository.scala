@@ -1,9 +1,12 @@
 package designated.director.repositories
 
 import designated.director.actors.League
-import org.neo4j.driver.v1.Value
+import designated.director.api.JsonSupport
 
-case class LeagueRepository(conn: Connection) extends Neo4jRepository[League](conn) with Repository[League] {
+import org.neo4j.driver.v1.Value
+import spray.json._
+
+case class LeagueRepository(conn: Connection) extends Neo4jRepository[League](conn) with Repository[League] with JsonSupport {
   val kind:String = "League"
 
   val recordMap:Value => League = r => {
@@ -11,5 +14,5 @@ case class LeagueRepository(conn: Connection) extends Neo4jRepository[League](co
   }
 
   val key: League => String = t => t.name.replaceAll(" ", "")
-  val insert: League => String = t => s"""{id:"${t.id}", name:"${t.name}"}"""
+  val insert: League => String = _.toJson.compactPrint
 }
