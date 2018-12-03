@@ -28,15 +28,16 @@ class TeamActor(repository:SubRepository[Team], idGenerator: IdGenerator[String]
     case GetTeams(leagueId) =>
       val o = repository.getAll(leagueId).map(Teams)
       o pipeTo sender()
+      
     case CreateTeam(leagueId, team) =>
       val t = Team(leagueId, idGenerator.getNewId, team.name)
       repository.create(t) pipeTo sender()
+
     case GetTeam(leagueId, id) =>
       repository.get(leagueId, id) pipeTo sender()
+
     case DeleteTeam(leagueId, id) =>
       val o = repository.delete(leagueId, id)
-
       o pipeTo sender()
   }
-
 }

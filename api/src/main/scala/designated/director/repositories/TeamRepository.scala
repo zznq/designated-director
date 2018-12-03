@@ -1,22 +1,24 @@
 package designated.director.repositories
 
 import designated.director.actors.Team
+import designated.director.api.JsonSupport
+import designated.director.repositories.RepositoryTypes.{AllResults, CreateResult, DeleteResult}
 import org.neo4j.driver.v1.{Statement, Value, Values}
 
 import scala.concurrent.{ExecutionContext, Future}
+import spray.json._
 import java.time.Year
 
-import designated.director.repositories.RepositoryTypes.{AllResults, CreateResult, DeleteResult}
 
-case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) with SubRepository[Team] {
-  val kind:String = "Team"
+case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) with SubRepository[Team] with JsonSupport {
+  val kind: String = "Team"
 
-  val recordMap:Value => Team = r => {
+  val recordMap: Value => Team = r => {
     Team(r.get("leagueId").asString(), r.get("id").asString(), r.get("name").asString())
   }
 
   val key: Team => String = t => t.name.replaceAll(" ", "")
-  val insert: Team => String = t => s"""{leagueId: "${t.leagueId}", id:"${t.id}", name:"${t.name}"}"""
+  val insert: Team => String = t => t.toJson.compactPrint
 
   override def getAll(leagueId: String)(implicit ex:ExecutionContext): Future[AllResults[Team]] = {
     val params = Values.parameters("lId", leagueId)
@@ -24,9 +26,7 @@ case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) 
 
     runQueryListAsync(
       statement,
-      r => {
-        recordMap(r.get("n"))
-      }
+      r => recordMap(r.get("n"))
     )
   }
 
@@ -36,13 +36,7 @@ case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) 
 
     runQueryAsync(
       statement,
-      r => {
-        if(r == null) {
-          None
-        } else {
-          Some(recordMap(r.get("n")))
-        }
-      }
+      r => Option(r).map(a => recordMap(a.get("n")))
     )
   }
 
