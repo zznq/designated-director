@@ -14,5 +14,5 @@ case class LeagueRepository(conn: Connection) extends Neo4jRepository[League](co
   }
 
   val key: League => String = t => t.name.replaceAll(" ", "")
-  val insert: League => String = _.toJson.compactPrint
+  val insert: League => String = t => t.toJson.compactPrint
 }

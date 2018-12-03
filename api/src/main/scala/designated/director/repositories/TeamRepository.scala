@@ -18,7 +18,7 @@ case class TeamRepository(conn: Connection) extends Neo4jRepository[Team](conn) 
   }
 
   val key: Team => String = t => t.name.replaceAll(" ", "")
-  val insert: Team => String = _.toJson.compactPrint
+  val insert: Team => String = t => t.toJson.compactPrint
 
   override def getAll(leagueId: String)(implicit ex:ExecutionContext): Future[AllResults[Team]] = {
     val params = Values.parameters("lId", leagueId)
