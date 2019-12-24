@@ -55,12 +55,12 @@ case class MockTeamRepository() extends SubRepository[Team] {
   }
 }
 
-case class MockIdGenerator() extends IdGenerator[String] {
+case class MockTeamIdGenerator() extends IdGenerator[String] {
   override def getNewId: String = "2"
 }
 
 class TeamRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with TeamRoutes {
-  val teamActor: ActorRef = system.actorOf(TeamActor.props(MockTeamRepository(), MockIdGenerator()), "teamActor")
+  val teamActor: ActorRef = system.actorOf(TeamActor.props(MockTeamRepository(), MockTeamIdGenerator()), "teamActor")
 
   describe("Team Routes") {
     describe("/teams") {

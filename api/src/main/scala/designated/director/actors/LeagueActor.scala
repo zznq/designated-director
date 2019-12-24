@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
+import designated.director.api.IdGenerator
 import designated.director.repositories.Repository
 
 final case class League(id: String, name: String)
@@ -17,10 +18,10 @@ object LeagueActor {
   final case class DeleteLeauge(id: String)
 
   def props: Props = Props[LeagueActor]
-  def props(repository: Repository[League]): Props = Props(new LeagueActor(repository))
+  def props(repository: Repository[League], idGenerator: IdGenerator[String]): Props = Props(new LeagueActor(repository, idGenerator))
 }
 
-class LeagueActor(repository: Repository[League]) extends Actor with ActorLogging {
+class LeagueActor(repository: Repository[League], idGenerator: IdGenerator[String]) extends Actor with ActorLogging {
   import LeagueActor.{GetLeagues,CreateLeague,GetLeague,DeleteLeauge}
   import context.dispatcher
 
@@ -29,7 +30,7 @@ class LeagueActor(repository: Repository[League]) extends Actor with ActorLoggin
       val o = repository.getAll.map(Leagues)
       o pipeTo sender()
     case CreateLeague(league) =>
-      val l = League(UUID.randomUUID().toString, league.name)
+      val l = League(idGenerator.getNewId, league.name)
       repository.create(l) pipeTo sender()
     case GetLeague(id) =>
       repository get id pipeTo sender()
