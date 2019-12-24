@@ -48,7 +48,13 @@ case class MockLeagueRepository() extends Repository[League] {
 }
 
 case class MockLeagueIdGenerator() extends IdGenerator[String] {
-  override def getNewId: String = "4"
+  val ids = List("4", "1")
+  var calCount = 0
+  override def getNewId: String = {
+    val i = calCount
+    calCount = Math.min(calCount + 1, ids.size - 1)
+    ids(i)
+  }
 }
 
 class LeagueRoutesTest extends FunSpec with Matchers with ScalatestRouteTest with LeagueRoutes {
@@ -77,14 +83,14 @@ class LeagueRoutesTest extends FunSpec with Matchers with ScalatestRouteTest wit
             responseAs[String] shouldBe """{"id":"4","name":"Test League"}"""
           }
         }
-//        it("returns 500 when record can't be created") {
-//          val t = League("2", "Test League")
-//          Post("/leagues", t) ~> leagueRoutes(Seq.empty) ~> check {
-//            handled shouldBe true
-//            status shouldBe StatusCodes.InternalServerError
-//            responseAs[String] shouldBe """Record Can't Be Created"""
-//          }
-//        }
+        it("returns 500 when record can't be created") {
+          val t = LeaguePost("Not a Test League")
+          Post("/leagues", t) ~> leagueRoutes(Seq.empty) ~> check {
+            handled shouldBe true
+            status shouldBe StatusCodes.InternalServerError
+            responseAs[String] shouldBe """Record Can't Be Created"""
+          }
+        }
       }
 
       describe("GET /leagues/{id}") {
