@@ -54,8 +54,9 @@ trait LeagueRoutes extends JsonSupport {
           // GET /leagues/{id}
           get {
             val l = (leagueActor ? GetLeague(id)).mapTo[Option[League]]
-            rejectEmptyResponse {
-              complete(l)
+            onSuccess(l) {
+              case Some(league) => complete(StatusCodes.OK, league)
+              case None => complete(StatusCodes.NotFound, s"No league found with id $id")
             }
           } ~
             // DELETE /leagues/{id}
@@ -64,7 +65,7 @@ trait LeagueRoutes extends JsonSupport {
             onSuccess(l) { performed =>
               llog.info("Delete League [{}]", l)
               performed match {
-                case Right(r) => complete((StatusCodes.OK, r.toString))
+                case Right(r) => complete((StatusCodes.OK, s"Deleted league with id $id"))
                 case Left(message) => complete((StatusCodes.InternalServerError, message))
               }
             }

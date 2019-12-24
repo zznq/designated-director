@@ -2,7 +2,7 @@ env:
   global:
     - CC_TEST_REPORTER_ID=07d8b3bd4c80243c818a4894aa249a791f16223ddbf5688f639868c51e0d2761
 language: scala
-jdk: oraclejdk8
+jdk: openjdk8
 scala:
   - 2.12.6
 before_script:
